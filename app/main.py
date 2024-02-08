@@ -1,5 +1,6 @@
 import requests
 import shutil
+import logging
 from zipfile import ZipFile
 from config import load_cofing
 from pathlib import Path
@@ -108,26 +109,29 @@ def move_files(file_path:Path, destination_directory:Path):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO,
+                        format="%(levelname)s - Message:%(message)s - %(asctime)s",
+                        datefmt="%Y/%m/%d")
     # Load configuration
     config = load_cofing()
     # Current directory
     directory_path = Path.cwd() / config.get('name_directory')
     # create directory exists
     create_download_directory(directory_path)
-    print("Starting to download files...")
+    logging.info("Starting to download files...")
     # Iterate over download URLs
     for url in config.get('download_uris'):
         file_name = extract_file_name(url)
-        print(f"Downloading file: {file_name}")
+        logging.info(f"Downloading file: {file_name}")
         try:
             archive_path = download_file(url, directory_path, file_name)
         except requests.exceptions.HTTPError as err:
-            print(err)
+            logging.warning(f"Error downloading file {err}")
             continue
         extracted_files_path = extract_zip(archive_path, directory_path)
         move_files(extracted_files_path, directory_path)
         delete_archives(archive_path, directory_path)
-    print("Download complete.")
+    logging.info("Download complete.")
 
 
 
